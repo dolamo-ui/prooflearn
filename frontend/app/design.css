@@ -1,0 +1,246 @@
+/* ProofLearn design v2: "the marked exercise book".
+   Loaded after globals.css. Remove the import in layout.tsx to go back to the old look.
+   Desk = cobalt book cloth. Pages = ruled white. Pen = red/green marking, highlighter = yellow. */
+
+:root{
+  --desk:#2a46c8; --cover:#101c5e; --paper:#fdfdff; --rule:#e3e9f8; --ink:#14235a; --mute:#566087;
+  --red:#c5301f; --hi:#ffe66b; --ok:#0f7f58; --note:#fff6c7; --cobalt:#2a46c8;
+  --serif:"Young Serif",Georgia,"Times New Roman",serif;
+  --sans:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --hand:"Caveat","Bradley Hand","Segoe Print",cursive;
+}
+
+/* ---------- desk ---------- */
+html,body{overflow-x:hidden}
+body{
+  font:17px/1.6 var(--sans);color:var(--ink);min-height:100vh;
+  background:
+    radial-gradient(1100px 520px at 50% -8%,rgba(255,255,255,.16),transparent 62%),
+    repeating-linear-gradient(45deg,rgba(255,255,255,.04) 0 1px,transparent 1px 4px),
+    repeating-linear-gradient(-45deg,rgba(0,0,40,.07) 0 1px,transparent 1px 4px),
+    var(--desk);
+}
+h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:0}
+small{color:var(--mute)}
+.app{padding:0 1.2rem 3rem}
+
+/* ---------- header on the desk ---------- */
+.top{align-items:center;padding:1.6rem 0 1.3rem}
+.top h1{
+  display:inline-block;color:#fff;font-size:clamp(2.1rem,5.4vw,3rem);line-height:1.1;margin:0 0 .15rem -.12em;padding:0 .12em;
+  background:linear-gradient(var(--hi),var(--hi)) 0 94%/100% 7px no-repeat;
+}
+.top p{color:#dbe3ff;font-size:1.08rem}
+.top nav{align-items:center;gap:.5rem}
+.tab{border:0;border-radius:999px;padding:.4rem 1.15rem;min-height:40px;color:#fff;background:rgba(255,255,255,.14);font-weight:700;transition:background .15s}
+.tab:hover{background:rgba(255,255,255,.26)}
+.tab.on{background:#fff;color:var(--ink)}
+.top .ghost{color:#fff;border-color:rgba(255,255,255,.65)}
+.top .ghost:hover{background:rgba(255,255,255,.16)}
+.pill{background:rgba(255,255,255,.14);color:#fff;border-color:transparent}
+.pill.connected{color:#baffe0}.pill.unavailable{color:#ffd6cf}
+.app>.warn{border-radius:6px;margin:0 0 1rem}
+
+/* progress, on the desk */
+.stepper{margin:0 0 1.2rem}
+.stepper li{background:rgba(255,255,255,.13);border-color:transparent;color:#dbe3ff}
+.stepper li span{background:rgba(255,255,255,.26);color:#fff}
+.stepper li.now{background:var(--hi);color:var(--ink)}
+.stepper li.now span{background:var(--ink);color:#fff}
+.stepper li.done{color:#fff}
+.stepper li.done span{background:#fff;color:var(--cobalt)}
+
+/* ---------- the book ---------- */
+.shell{
+  position:relative;gap:0;perspective:2600px;
+  padding:12px 12px 16px;background:var(--cover);border-radius:14px;
+  box-shadow:0 34px 60px -26px rgba(5,10,60,.75),0 2px 0 rgba(255,255,255,.14) inset;
+}
+.shell:not(.two){max-width:840px;margin:0 auto}
+.shell.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch}
+/* the gutter where the pages meet */
+.shell.two::after{
+  content:"";position:absolute;z-index:3;top:12px;bottom:16px;left:50%;width:84px;transform:translateX(-50%);pointer-events:none;
+  background:linear-gradient(to right,transparent,rgba(20,35,90,.10) 32%,rgba(20,35,90,.30) 50%,rgba(20,35,90,.10) 68%,transparent);
+}
+
+/* a page */
+.paper{
+  position:relative;min-height:540px;border:0;border-radius:4px 10px 10px 4px;
+  padding:2.2rem 2.2rem 3rem 5.4rem;background-color:var(--paper);
+  background-image:
+    linear-gradient(to right,transparent 62px,rgba(197,48,31,.42) 62px 64px,transparent 64px),
+    repeating-linear-gradient(transparent 0 31px,var(--rule) 31px 32px);
+  box-shadow:0 2px 0 #fff,0 4px 0 #cdd5ee,0 6px 0 #fff,0 8px 0 #c3ccea;
+  transform-origin:left center;
+  animation:page-in .8s cubic-bezier(.2,.7,.2,1) both;
+}
+.shell:not(.two) .paper::before{ /* shadow near the binding */
+  content:"";position:absolute;inset:0 auto 0 0;width:30px;border-radius:4px 0 0 4px;pointer-events:none;
+  background:linear-gradient(to right,rgba(20,35,90,.18),transparent);
+}
+.shell.two .paper{border-radius:4px 0 0 4px;padding-right:3.4rem;transform-origin:right center}
+.paper h2{font-size:clamp(1.7rem,3.2vw,2.25rem);line-height:1.15;margin:0 0 .7rem}
+.paper h3{font-size:1.25rem;margin-top:1.5rem}
+.paper p,.paper li{line-height:32px}
+
+@keyframes page-in{
+  from{transform:rotateY(-62deg);filter:brightness(.86);opacity:.35}
+  to{transform:rotateY(0);filter:none;opacity:1}
+}
+
+/* the cover opens once, when the app loads */
+.cover{
+  position:absolute;inset:0;z-index:30;pointer-events:none;border-radius:14px;
+  transform-origin:left center;transform-style:preserve-3d;
+  animation:cover-open 1.7s cubic-bezier(.62,0,.22,1) .45s both;
+}
+.cover::before,.cover::after{content:"";position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.cover::before{
+  content:"ProofLearn";display:grid;place-items:center;text-align:center;
+  font:400 clamp(1.8rem,5vw,3rem)/1 var(--serif);color:var(--ink);
+  background:
+    linear-gradient(#fdfdff,#fdfdff) center/58% 24% no-repeat,
+    linear-gradient(to right,var(--red) 0 30px,transparent 30px),
+    repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 1px,transparent 1px 4px),
+    var(--cover);
+  box-shadow:0 0 0 1px rgba(255,255,255,.18) inset;
+}
+.cover::after{
+  transform:rotateY(180deg);
+  background:repeating-linear-gradient(90deg,#dfe6fb 0 14px,#d3dcf6 14px 15px);
+}
+@keyframes cover-open{
+  0%{transform:rotateY(0);opacity:1}
+  82%{opacity:1}
+  100%{transform:rotateY(-180deg);opacity:0;visibility:hidden}
+}
+
+/* ---------- agent working-out: the right-hand page ---------- */
+.trace{
+  position:relative;top:auto;border:0;border-radius:0 10px 10px 0;
+  padding:2.2rem 2rem 3rem 3.6rem;background-color:var(--paper);
+  background-image:radial-gradient(circle,#c9d3ee 1px,transparent 1.5px);background-size:24px 24px;
+  box-shadow:0 2px 0 #fff,0 4px 0 #cdd5ee,0 6px 0 #fff,0 8px 0 #c3ccea;
+}
+.trace h3{font-family:var(--hand);font-weight:600;font-size:2.1rem;line-height:1.1;color:var(--red);margin:0}
+.trace>p small{font-size:.95rem}
+.trace .log{position:sticky;top:1rem;max-height:70vh;margin-top:.8rem;padding-right:.4rem}
+.ln{font-family:var(--hand);font-size:1.32rem;line-height:1.22;border-left:0;padding-left:0;margin:0 0 .75rem;color:var(--ink)}
+.ln b{
+  display:inline-block;margin-right:.45rem;padding:0 .5rem;border-radius:4px;vertical-align:3px;
+  font:700 .76rem/1.6 var(--sans);color:#fff;background:var(--ink);
+}
+.ln.critic,.ln.fix,.ln.adapt,.ln.tool,.ln.mark{color:var(--ink);border:0}
+.ln.critic b,.ln.adapt b{background:var(--red)}
+.ln.fix b,.ln.mark b{background:var(--ok)}
+.ln.tool b{background:var(--mute)}
+
+/* ---------- controls ---------- */
+.btn{
+  background:var(--cobalt);color:#fff;border:0;border-radius:10px;padding:.65rem 1.3rem;font-weight:700;
+  box-shadow:0 4px 0 var(--ink);transition:transform .12s,box-shadow .12s;
+}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 0 var(--ink)}
+.btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn:disabled{box-shadow:none;opacity:.5}
+.ghost{border:2px solid var(--ink);border-radius:10px;font-weight:700;color:var(--ink);transition:background .15s}
+.ghost:hover{background:var(--hi)}
+.link{color:var(--cobalt);font-weight:700}
+:focus-visible{outline:3px solid var(--cobalt);outline-offset:3px}
+.top :focus-visible{outline-color:#fff}
+
+.ask input,.ask select,.answer-field textarea,.answer-field input,.answer-field select,.src textarea,.voice-tutor textarea{
+  border:2px solid var(--ink);border-radius:8px;background:#fff;color:var(--ink);
+}
+.ask input{font-size:1.15rem;padding:.8rem 1rem}
+.ask input:focus,.ask select:focus,textarea:focus,.answer-field input:focus,.answer-field select:focus{box-shadow:0 0 0 5px var(--hi);border-color:var(--cobalt)}
+input[type=radio],input[type=checkbox]{accent-color:var(--cobalt)}
+
+.chip{background:var(--hi);border:0;border-radius:6px;padding:.1rem .9rem;font-weight:700;color:var(--ink);transition:transform .12s}
+.chip:nth-child(odd){transform:rotate(-1.2deg)}.chip:nth-child(even){transform:rotate(1deg)}
+.chip:hover{transform:rotate(0) translateY(-2px)}
+
+/* "How it works" is a real sequence, so it gets pen numbers in the margin */
+.steps{list-style:none;padding-left:0;counter-reset:step}
+.steps li{position:relative;counter-increment:step}
+.steps li::before{
+  content:counter(step);position:absolute;left:-1.45rem;top:-.15rem;width:1.5rem;text-align:center;
+  font:600 1.9rem/32px var(--hand);color:var(--red);
+}
+
+/* ---------- reading and answering ---------- */
+mark{background:linear-gradient(transparent 18%,var(--hi) 18% 92%,transparent 92%);padding:0 .2rem}
+.block{border-left:5px solid var(--cobalt);border-radius:2px}
+.q{border-top:2px solid var(--ink)}
+.q legend{font-family:var(--serif);font-weight:400;font-size:1.1rem}
+.opt{border-radius:6px;padding:0 .6rem;transition:background .12s}
+.opt:hover{background:rgba(255,230,107,.4)}
+.opt.on{background:var(--hi)}
+.order-list li{border-radius:8px;background:#fff}
+.lesson-progress{font-family:var(--hand);font-size:1.3rem}
+
+.track{height:16px;border-radius:8px;overflow:hidden;background:var(--rule)}
+.track i{border-radius:8px}
+.bar{max-width:560px}
+
+/* ---------- notes stuck on the page ---------- */
+.warn{background:var(--note);border-left:5px solid var(--red);border-radius:2px 8px 8px 2px;padding:.3rem 1rem}
+.err{border-radius:2px 8px 8px 2px;border-left-width:5px}
+.note-ok{color:var(--ok);font-weight:700}
+.src,.teacher-card{border-radius:8px;border:1px solid #d3dbf1;background:#fff}
+.reteach-card{border-left:5px solid var(--cobalt);border-radius:2px 8px 8px 2px;background:#eef2ff}
+.tutor-reply{border-left-color:var(--cobalt);background:#eef2ff;border-radius:2px 8px 8px 2px}
+.tag{border-radius:6px}.pill,.stepper li{border-radius:999px}
+.hist li{border-bottom-style:dashed}
+
+/* agent self-check: graph paper, taped on */
+.selfcheck{
+  position:relative;margin:1.8rem 0 1.2rem;padding:1.1rem 1.2rem 1rem;border:1px solid #c5d0f0;border-radius:3px;
+  background:
+    linear-gradient(rgba(42,70,200,.09) 1px,transparent 1px) 0 0/20px 20px,
+    linear-gradient(90deg,rgba(42,70,200,.09) 1px,transparent 1px) 0 0/20px 20px,#f6f8ff;
+  box-shadow:0 6px 12px -8px rgba(20,35,90,.5);
+}
+.selfcheck::before{
+  content:"";position:absolute;top:-13px;left:50%;width:96px;height:26px;transform:translateX(-50%) rotate(-2deg);
+  background:rgba(255,230,107,.8);box-shadow:0 1px 2px rgba(20,35,90,.2);
+}
+.selfcheck h3{margin-top:.2rem;font-size:1.35rem}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr))}
+.tiles>div,.proofrow>div{border:0;border-bottom:4px solid var(--rule);border-radius:0;background:transparent;padding:.3rem .2rem .45rem}
+.tiles b,.proofrow b{font:400 2.5rem/1.05 var(--serif)}
+.tiles span,.proofrow span{font-size:.86rem}
+.tiles .good,.proofrow .good{border-bottom-color:var(--ok)}
+.selfcheck li{line-height:1.5}
+
+/* proof of learning: the number to remember */
+.proof{margin:1.2rem 0;padding:.8rem 1.2rem 1.1rem;border:3px solid var(--ok);border-radius:12px;background:#fff}
+.proofrow .arrow{font:600 3.2rem/1 var(--hand);color:var(--red);border:0}
+.proofrow .gain b{color:var(--ok)}
+
+/* teacher insight: marked with highlighter */
+.insight{margin:1.2rem 0;padding:.8rem 1.2rem 1rem;border:0;border-left:8px solid var(--red);border-radius:2px 10px 10px 2px;background:var(--note)}
+.insight p{line-height:1.5;font-size:1.1rem}
+.insight p b{background:linear-gradient(transparent 55%,rgba(255,230,107,.95) 55%)}
+
+/* ---------- small screens ---------- */
+@media(max-width:860px){
+  .app{padding:0 .8rem 2.4rem}
+  .shell{padding:8px 8px 12px;border-radius:12px}
+  .shell.two{grid-template-columns:1fr;row-gap:10px}
+  .shell.two::after{display:none}
+  .paper,.shell.two .paper{padding:1.6rem 1.1rem 2.2rem 3.4rem;border-radius:4px 8px 8px 4px;min-height:420px;transform-origin:left center;
+    background-image:linear-gradient(to right,transparent 38px,rgba(197,48,31,.42) 38px 40px,transparent 40px),repeating-linear-gradient(transparent 0 31px,var(--rule) 31px 32px)}
+  .trace{padding:1.6rem 1.1rem 2.2rem;border-radius:4px 8px 8px 4px}
+  .trace .log{position:static}
+  .steps li::before{left:-1.7rem}
+  .cover::before{background-size:70% 22%}
+}
+
+/* people who prefer calm: no opening, no page turns */
+@media(prefers-reduced-motion:reduce){
+  .cover{display:none}
+  .paper{animation:none}
+  .btn,.chip,.opt,.tab{transition:none}
+}
