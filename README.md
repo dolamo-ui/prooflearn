@@ -5,6 +5,9 @@
 ProofLearn is an autonomous education colleague. Give it a goal and it decides what to teach, writes the lessons and tests, has a second AI check its own work, fixes what fails, and only says a learner has learned something when their **marked answers** prove it.
 
 Built for **Colleague Zero 2026** (Melsoft Academy).
+<img width="808" height="463" alt="image" src="https://github.com/user-attachments/assets/ae254583-e520-4b89-8166-d4ef818e1cb6" />
+<img width="1177" height="526" alt="image" src="https://github.com/user-attachments/assets/d0eaf085-4248-49f6-9ca2-e3efa1ea79ba" />
+
 
 | | |
 |---|---|
