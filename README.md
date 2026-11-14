@@ -1,141 +1,166 @@
-# ProofLearn
+# ProofLearn Digital Colleague
 
-**An AI study platform with two autonomous agents: a teacher's digital colleague and a learner's personal coach — built so the humans stay in control.**
+> **Teach me anything. Prove I learned it.**
 
-ProofLearn turns notes into lessons, tests and coaching. A teacher types one goal ("photosynthesis, five lessons, a test, share it with my class") and an autonomous colleague plans and does the work, step by step, inside strict server-enforced guardrails. A learner gets a coach that builds tests from *their own* notes and only accepts a topic as learned when they score 70%+ on questions the server marked.
+ProofLearn is an autonomous education colleague. Give it a goal and it decides what to teach, writes the lessons and tests, has a second AI check its own work, fixes what fails, and only says a learner has learned something when their **marked answers** prove it.
+
+Built for **Colleague Zero 2026** (Melsoft Academy).
+
+| | |
+|---|---|
+| **Live demo** | `https://prooflearn-agent.vercel.app/` |
+| **Demo without AI or Wi-Fi** | `/demo` page in the app |
+| **Repo** | `https://github.com/dolamo-ui/prooflearn` |
 
 ---
 
-## Why it exists
+## The problem
 
-- **Teachers lose hours every week** to lesson planning, test writing, quality-checking, marking and reporting.
-- **Learners drown in notes** with no fast way to test themselves, ask questions against their own material, or know what to revise next.
-- **Schools can't trust plain chatbots** — no guardrails, no audit trail, no quality control.
+When someone says "teach me Excel", nobody can tell whether they really learned it or just clicked through. Teachers spend hours writing tests from memos and past papers, and then do not know which topics to teach again.
 
-ProofLearn's answer: agents that *do the workflow*, not just answer questions — with the rules enforced in code, not by the model.
+## What it does
 
-## What's inside
+**For learners** (no account needed)
 
-### For teachers
-- **Notes for my class** — write, paste, or upload PDF/Word; the AI helper drafts, fixes, summarises or rewrites (it only suggests — nothing changes until you press *Use this*, and you can undo).
-- **Tests and classwork** — AI drafts questions from your note (choice, written, ordering), a strict **checker AI** verifies each one, and **you read and edit every question before it goes out**. Share with a code, link or QR; download/print student and teacher copies.
-- **Results** — class average, weak topics, hardest questions (totals only — never learner names or written answers).
-- **Lesson plans and 10-minute reteach plans.**
-- **The digital colleague** (autonomous agent) — type a goal; it works as a small team and reports back.
+- **My learning coach**: type what you want to learn. The coach decides when to teach, when to test you, and when to re-teach in a different way. It stops only when your marked scores prove the learning.
+- Paste or upload notes (PDF, Word, even scanned PDFs through in-browser OCR), then test yourself from them. Every answer shows the passage in your notes it came from.
+- Ask your notes questions, and open a teacher's test with a code, link or QR code.
 
-### For learners
-- **My notes** — type, paste, upload PDF/Word, or start a draft with AI.
-- **Test myself** — AI writes questions from *your* note; every question shows the exact passage it came from.
-- **Ask my notes** — answers grounded in your note, with the source shown; if your note doesn't say, it says so.
-- **The coach** (autonomous agent) — teaches one topic at a time, quizzes you, and only calls a topic *learned* at 70%+ on server-marked questions.
+**For teachers**
 
-### The two autonomous agents
+- **Digital colleague**: give a goal such as "make a lesson and a test on photosynthesis from my notes and share it". The colleague plans, picks its own tools, and reports back with what it made and what to double-check.
+- Upload a memo or past paper. The AI drafts questions, a checker AI removes or fixes weak ones, and you edit them in a notebook-style editor.
+- Share by code, link or QR. See class average, topics to teach again and the hardest question.
+- Download tests as PDF or Word.
 
-The AI never executes anything directly. Each step, the model is shown the goal and everything that has happened so far, and it **chooses the next tool**; the server checks that choice against a fixed rulebook (`backend/app/colleague_rules.py`, `coach_rules.py`) — which tools exist, which are allowed right now, how often each may be used — and only then does the tool run through the normal, already-validated endpoints. If the model picks something unusable, it gets one correction; if it still fails, the server takes a safe default and says so openly.
+## How it is autonomous (and how it corrects itself)
 
-**The colleague's team** (one decision loop, presented in the UI as agent lanes):
-
-| Agent | What it does |
-|---|---|
-| Coordinator | Turns the goal into a plan and chooses each next step |
-| Researcher | Searches the teacher's notes and (optionally) the web |
-| Writer | Builds lessons, writes questions, plans lessons, drafts emails |
-| Checker | A strict second AI that fixes/removes any question it cannot support — a hard gate before sharing |
-| Publisher | Shares the finished test via code/link/QR — **only with prior teacher opt-in, and only for a test that just passed the checker with zero changes** |
-| Messenger | Reads result totals and drafts emails — **never sends anything** |
-
-**The coach's loop** is the same pattern with learner tools: `build_lessons → teach_topic → quiz → mark`, stopping when every topic is proven or it has taught a topic three times.
-
-## Quick start
-
-You run **two programs** (see [SETUP-GUIDE.md](SETUP-GUIDE.md) for the full step-by-step, Windows/Mac/Linux):
-
-```bash
-# Terminal 1 — backend (Python 3.10+, FastAPI) on http://127.0.0.1:8000
-cd backend
-python -m venv venv && source venv/bin/activate   # Windows: venv\Scriptsctivate
-pip install -r requirements.txt
-cp .env.example .env                              # add GROQ_API_KEY and APP_SECRET
-python -m uvicorn app.main:app --reload --port 8000
-
-# Terminal 2 — frontend (Node 18.17+, Next.js) on http://localhost:3000
-cd frontend
-npm install
-cp .env.example .env.local
-npm run dev
-```
-
-You need a free [Groq API key](https://console.groq.com/keys). Optional: a [Tavily key](https://app.tavily.com) for the colleague's web search.
-
-## Repository layout
+The AI chooses the **next step**; the code enforces the **rules**.
 
 ```
-prooflearn-v15/
-  SETUP-GUIDE.md    step-by-step setup for Windows, Mac and Linux
-  backend/          Python (FastAPI): all AI calls, marking, safety, storage
-    app/routes/     one file per API area (notes, work, study, agent, assist, extract, search, colleague, coach)
-    app/colleague_rules.py, coach_rules.py   the tool catalogues + safety rules for the agents
-    tests/          free tests against a fake AI (no key needed)
-  frontend/         Next.js: the screens for learners and teachers
-    components/     Colleague.tsx (agent lanes view), Coach.tsx, WorkStudio.tsx, NotesLab.tsx, ...
-    lib/            agent run loop (runAgents.ts), tool catalogues kept in step with the backend
+Goal ──> Coordinator decides the next step
+          ├─ Researcher   searches the notes and the web (read-only)
+          ├─ Writer       lessons and lesson plan
+          ├─ Quality loop (Google ADK LoopAgent)
+          │     writer_qa  ──write questions──>  checker  ──fixes / removes bad ones──┐
+          │         ▲_________________ repeat until a check passes with no changes ____│
+          ├─ Publisher    shares a checked test, reads results (runs on the teacher's device)
+          └─ Messenger    drafts emails (never sends)
 ```
 
-Every `/api/...` request from the browser is proxied by Next.js to the backend (`rewrites` in `frontend/next.config.mjs`); the browser never talks to Python directly.
+**Self-correction:** a test cannot be shared until the checker passes it with *zero* fixes and *zero* removals. If the checker changes anything, the loop runs again (up to 3 rounds).
 
-## How the agent loop works
+**Tools the colleague can use:** `search_notes`, `web_search` (Tavily), `build_lessons`, `write_questions`, `check_questions`, `plan_lesson`, `share_test`, `read_results`, `draft_email`, `finish`.
 
-1. The human sets a goal and presses Start (they can press Stop at any time).
-2. Each step, the browser sends the goal plus a snapshot of state and the history of what happened to `/api/colleague` (or `/api/coach`).
-3. The server computes which tools are **offered right now** from the state (e.g. `share_test` is only offered after a clean checker pass) and prompts the model: *choose ONE tool; decide the order yourself; skip what the goal doesn't need; repeat or reroute when something fails.*
-4. The model returns `thought / action / args / plan`; the server validates it against the rules, corrects once, falls back to a safe default if needed.
-5. The tool runs; its result feeds back into the next step; repeat until `finish`, the step cap, or no tools remain.
+**Two engines, one screen:** *Classic* (a loop in the browser) and *Agent team* (separate agents built with [Google ADK](https://adk.dev/)).
 
-The result: genuine decide-at-runtime autonomy — bounded by hard step caps, per-tool use limits, rate limits, prompt-injection fences, and human approval gates on anything that leaves the classroom.
+## Safety and trust
 
-## Safety and privacy (the design centre)
+- **Human in the loop:** emails are drafts only. Nothing is sent or shared without the teacher.
+- **Rules in code, not just prompts:** each tool has preconditions and usage limits (for example, `share_test` only works after a clean check). The run has a step limit.
+- **Answers never reach the learner's browser before hand-in.** Marking happens on the server, and self-test keys are signed (HMAC).
+- **Prompt-injection defence:** untrusted text is cleaned and fenced as data. A written answer that tries to give the marker orders is marked wrong without asking the AI. AI output is validated in code.
+- **Rate limits, same-site checks, strict input validation, file-type checks and a content security policy.**
+- **Secrets stay on the backend** and are scrubbed from AI replies.
 
-- **Server-enforced rules.** The AI proposes, the code disposes. Tool catalogues, per-tool limits and blocked-conditions live in `colleague_rules.py` / `coach_rules.py` and are re-checked on every call.
-- **Human approval gates.** Sharing a test requires an explicit opt-in before the run and a zero-change checker pass; emails are drafts only.
-- **Learner privacy.** Agents see result totals only — never names or written answers. Learners are asked to use nicknames.
-- **Input hygiene.** Rate limits, same-site checks, prompt-injection fences, strict validation of everything the model returns, signed answer keys.
-- **No silent changes.** The AI helper only suggests; the human confirms.
+Details and honest gaps: [`frontend/SECURITY.md`](frontend/SECURITY.md).
 
 ## Tech stack
 
-- **Frontend:** Next.js (React, TypeScript)
-- **Backend:** Python, FastAPI; Groq LLMs (configurable model + fallbacks, token budget)
-- **RAG:** BM25 passage ranking over the learner's/teacher's own notes; OCR (Tesseract) for scanned past papers
-- **Search:** Tavily (optional, for the colleague)
-- **Storage:** JSON files in `backend/.data/` (swap for a real database — see roadmap)
-- **Tests:** free test scripts against a fake AI (`backend/tests/`), no API key needed
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 14, React 18, TypeScript |
+| Backend | Python, FastAPI |
+| AI | Groq (`openai/gpt-oss-120b` by default), Google Agent Development Kit (ADK), optional Gemini or any LiteLLM model |
+| Search | Tavily (optional) |
+| Files | `pypdf`, `python-docx`, in-browser OCR (Tesseract.js), `jspdf` |
+| Storage | JSON files in `backend/.data/` (prototype; see limits below) |
 
-## Running the tests (no API key needed)
+```
+backend/    Python (FastAPI): the AI, marking, saving, reading PDF/Word   -> http://127.0.0.1:8000
+frontend/   Next.js: the screens learners and teachers see                -> http://localhost:3000
+```
+
+The browser only talks to the frontend; Next.js forwards `/api/...` to the backend.
+
+## Run it locally
+
+**You need:** Python 3.10+, Node.js 18.17+, and a free [Groq key](https://console.groq.com/keys). A [Tavily key](https://app.tavily.com) is optional (web search).
+
+**1. Backend** (Terminal 1)
+
+```bash
+cd backend
+python -m venv venv
+# Windows: venv\Scripts\activate      Mac/Linux: source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env      # Windows: copy .env.example .env
+```
+
+Edit `.env`:
+
+```
+GROQ_API_KEY=gsk_...
+APP_SECRET=<run: python -c "import secrets; print(secrets.token_hex(32))">
+TEACHER_PASSCODE=<optional, recommended once others can reach the app>
+TAVILY_API_KEY=<optional>
+```
+
+```bash
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+Check <http://127.0.0.1:8000/api/health>, which should show `{"ok":true}`. (`run.bat` or `bash run.sh` does all of this for you.)
+
+**2. Frontend** (Terminal 2)
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local      # Windows: copy .env.example .env.local
+npm run dev
+```
+
+Open <http://localhost:3000>. The green **"AI is on"** badge means the frontend reached the backend and the Groq key works.
+
+More help: [`SETUP-GUIDE.md`](SETUP-GUIDE.md), [`frontend/TROUBLESHOOTING.md`](frontend/TROUBLESHOOTING.md), [`frontend/USER-GUIDE.md`](frontend/USER-GUIDE.md).
+
+### Try the golden path (about 3 minutes)
+
+1. **Teacher** → *Digital colleague* → choose **Agent team** → goal: *"Make a short lesson and a test from my notes and share it."* Watch the agents hand off, the checker catch problems, and the loop re-check.
+2. Open the shared **test code** in a private window as a **learner** and hand it in.
+3. Back as the teacher, open **See results**: class average, topics to teach again, hardest question.
+4. **Learner** → *My learning coach* → type a goal and watch it teach, test, and re-teach until the marks prove it.
+
+Full demo script: [`frontend/DEMO.md`](frontend/DEMO.md).
+
+## Tests
+
+Free tests run against a fake AI (no keys needed):
 
 ```bash
 cd backend
 bash tests/run.sh smoke.sh
 bash tests/run.sh work.sh
-bash tests/run.sh abuse.sh TEACHER_PASSCODE=letmein-2026
-bash tests/run.sh "python3 api_agent.py" RATE_LIMIT_AGENT_PER_MIN=300 RATE_LIMIT_PER_MIN=300
+python tests/adk_team.py        # delegation, the checker loop, rules and limits
 ```
 
-## Roadmap (in build order)
+See [`backend/README.md`](backend/README.md) for the full list.
 
-1. **Accounts + database** (Supabase) — work on any device, verified learners, class lists
-2. **Redis rate limiting** (Upstash) — limits that survive restarts and multiple servers
-3. **Email/WhatsApp results** to teachers (with a human "Send" click)
-4. **Scanned papers (OCR)** — photos of past papers become notes
-5. **Embedding-based search** added to BM25 — find passages by meaning, not only words
-6. **POPIA privacy notice, data deletion and retention**
-7. **Deploy** — one URL for everyone
+## Deploying
 
-## Going to production
+Frontend on Vercel or your own server, backend on a host with a persistent disk (Railway, Render, a VPS). Set `BACKEND_URL` on the frontend; set `ALLOWED_ORIGINS`, `APP_ENV=production`, a real `APP_SECRET` and `TEACHER_PASSCODE` on the backend. Never commit `.env` files.
 
-Run with `APP_ENV=production`, a real `APP_SECRET` and `TEACHER_PASSCODE`, behind your host's process manager
-(`uvicorn app.main:app --host 127.0.0.1 --port 8000` without `--reload`), set `BACKEND_URL` in the frontend,
-and configure `ALLOWED_ORIGINS` for your domain.
+## Honest limits
 
----
+- **No accounts yet.** Teachers are identified by a secret key in their browser; learners join with a code. Not for high-stakes exams.
+- **Storage is files on one server**, and agent run state is in memory. Next step: Supabase (auth and database) and Redis.
+- **AI marking of written answers can be wrong.** Teachers can read written answers in Results.
+- **Privacy (POPIA):** text sent to an AI button goes to the model provider. Add a privacy notice and avoid real names before using with a class.
+- A team run makes more AI calls than Classic, so on Groq's free plan it may wait for the per-minute allowance.
 
-*ProofLearn: the agent does the work — the human keeps the keys.*
+Roadmap: [`frontend/ROADMAP.md`](frontend/ROADMAP.md).
+
+## Author
+
+**Nyakallo Dolamo**, junior full-stack and mobile developer, Gauteng, South Africa. [github.com/dolamo-ui](https://github.com/dolamo-ui)
